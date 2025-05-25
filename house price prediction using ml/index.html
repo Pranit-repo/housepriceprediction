@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Powered Family Wellness Platform</title>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .neumorphic {
+            background: #e0e5ec;
+            box-shadow: 9px 9px 16px rgb(163,177,198,0.6), 
+                       -9px -9px 16px rgba(255,255,255, 0.5);
+        }
+        
+        .neumorphic-inset {
+            background: #e0e5ec;
+            box-shadow: inset 9px 9px 16px rgb(163,177,198,0.6),
+                       inset -9px -9px 16px rgba(255,255,255, 0.5);
+        }
+
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-['Poppins']">
+    <div x-data="app()" class="min-h-screen">
+        <!-- Navigation -->
+        <nav class="neumorphic p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <img src="https://firebasestorage.googleapis.com/v0/b/widecanvas-d0dd4.appspot.com/o/logos%2F20221103092544__MG_0778-01.jpg?alt=media&token=42ad610b-54ed-4b14-95e5-af7e79536fd9" 
+                     alt="Logo" 
+                     class="h-12 rounded-full neumorphic p-1">
+                
+                <div class="flex space-x-4">
+                    <button 
+                        @click="currentLanguage = 'en'"
+                        :class="{'neumorphic-inset': currentLanguage === 'en'}"
+                        class="px-4 py-2 rounded-xl">English</button>
+                    <button 
+                        @click="currentLanguage = 'hi'"
+                        :class="{'neumorphic-inset': currentLanguage === 'hi'}"
+                        class="px-4 py-2 rounded-xl">हिंदी</button>
+                    <button 
+                        @click="currentLanguage = 'mr'"
+                        :class="{'neumorphic-inset': currentLanguage === 'mr'}"
+                        class="px-4 py-2 rounded-xl">मराठी</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="container mx-auto p-4">
+            <!-- Video Player Section -->
+            <section class="mb-8">
+                <div class="neumorphic rounded-2xl p-6">
+                    <h2 class="text-2xl font-bold mb-4" x-text="translations[currentLanguage].videoTitle"></h2>
+                    <div class="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden neumorphic-inset">
+                        <video x-ref="mainVideo" class="w-full" controls>
+                            <source src="https://assets.mixkit.co/videos/preview/mixkit-little-girl-playing-with-a-toy-in-the-garden-39758-large.mp4" type="video/mp4">
+                        </video>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interactive Activities -->
+            <section class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- AI Code Assistant -->
+                <div class="neumorphic rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4">
+                        <i class="bi bi-code-square"></i> 
+                        <span x-text="translations[currentLanguage].codeAssistant"></span>
+                    </h3>
+                    <div class="neumorphic-inset p-4 rounded-xl mb-4">
+                        <textarea 
+                            x-model="codeInput"
+                            class="w-full h-32 bg-transparent outline-none resize-none"
+                            :placeholder="translations[currentLanguage].codePlaceholder"
+                        ></textarea>
+                    </div>
+                    <button 
+                        @click="analyzeCode()"
+                        class="neumorphic px-6 py-2 rounded-xl w-full flex items-center justify-center"
+                        :disabled="isLoading">
+                        <i class="bi bi-lightning mr-2"></i>
+                        <span x-text="translations[currentLanguage].analyze"></span>
+                        <i x-show="isLoading" class="loading-spinner ml-2 bi bi-arrow-repeat"></i>
+                    </button>
+                    <div x-show="codeAnalysis" class="mt-4 neumorphic-inset p-4 rounded-xl">
+                        <pre x-text="codeAnalysis"></pre>
+                    </div>
+                </div>
+
+                <!-- WhatsApp Chat Analysis -->
+                <div class="neumorphic rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4">
+                        <i class="bi bi-whatsapp"></i>
+                        <span x-text="translations[currentLanguage].chatAnalysis"></span>
+                    </h3>
+                    <div class="neumorphic-inset p-4 rounded-xl space-y-4">
+                        <div x-show="!isConnected" class="text-center">
+                            <button 
+                                @click="connectWhatsApp()"
+                                class="neumorphic px-6 py-2 rounded-xl">
+                                <i class="bi bi-plug"></i>
+                                <span x-text="translations[currentLanguage].connect"></span>
+                            </button>
+                        </div>
+                        <div x-show="isConnected" class="space-y-4">
+                            <div class="flex gap-2">
+                                <div class="neumorphic-inset p-2 rounded-xl flex-1">
+                                    <span x-text="translations[currentLanguage].sentiment"></span>: 
+                                    <span x-text="chatMetrics.sentiment"></span>
+                                </div>
+                                <div class="neumorphic-inset p-2 rounded-xl flex-1">
+                                    <span x-text="translations[currentLanguage].emotion"></span>:
+                                    <span x-text="chatMetrics.emotion"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Screen Time Monitor -->
+                <div class="neumorphic rounded-2xl p-6">
+                    <h3 class="text-xl font-bold mb-4">
+                        <i class="bi bi-hourglass"></i>
+                        <span x-text="translations[currentLanguage].screenTime"></span>
+                    </h3>
+                    <div class="neumorphic-inset p-4 rounded-xl">
+                        <div class="relative pt-1">
+                            <div class="flex mb-2 items-center justify-between">
+                                <div>
+                                    <span x-text="translations[currentLanguage].dailyLimit"></span>
+                                </div>
+                                <div class="text-right">
+                                    <span x-text="screenTime + '/120'"></span>
+                                    <span x-text="translations[currentLanguage].minutes"></span>
+                                </div>
+                            </div>
+                            <div class="neumorphic h-4 rounded-xl">
+                                <div 
+                                    class="neumorphic-inset h-4 rounded-xl transition-all duration-500"
+                                    :style="`width: ${(screenTime/120)*100}%`">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        function app() {
+            return {
+                currentLanguage: 'en',
+                isLoading: false,
+                codeInput: '',
+                codeAnalysis: null,
+                isConnected: false,
+                screenTime: 45,
+                chatMetrics: {
+                    sentiment: 'Positive',
+                    emotion: 'Happy'
+                },
+                translations: {
+                    en: {
+                        videoTitle: 'Interactive Learning Videos',
+                        codeAssistant: 'AI Code Assistant',
+                        codePlaceholder: 'Enter your code here...',
+                        analyze: 'Analyze Code',
+                        chatAnalysis: 'Chat Analysis',
+                        connect: 'Connect WhatsApp',
+                        sentiment: 'Sentiment',
+                        emotion: 'Emotion',
+                        screenTime: 'Screen Time Monitor',
+                        dailyLimit: 'Daily Limit',
+                        minutes: 'minutes'
+                    },
+                    hi: {
+                        videoTitle: 'इंटरैक्टिव लर्निंग वीडियो',
+                        codeAssistant: 'एआई कोड सहायक',
+                        codePlaceholder: 'अपना कोड यहाँ दर्ज करें...',
+                        analyze: 'कोड विश्लेषण',
+                        chatAnalysis: 'चैट विश्लेषण',
+                        connect: 'व्हाट्सएप कनेक्ट करें',
+                        sentiment: 'भावना',
+                        emotion: 'मनोभाव',
+                        screenTime: 'स्क्रीन टाइम मॉनिटर',
+                        dailyLimit: 'दैनिक सीमा',
+                        minutes: 'मिनट'
+                    },
+                    mr: {
+                        videoTitle: 'इंटरॅक्टिव्ह लर्निंग व्हिडिओ',
+                        codeAssistant: 'एआय कोड सहाय्यक',
+                        codePlaceholder: 'तुमचा कोड येथे टाका...',
+                        analyze: 'कोड विश्लेषण',
+                        chatAnalysis: 'चॅट विश्लेषण',
+                        connect: 'व्हाट्सअॅप कनेक्ट करा',
+                        sentiment: 'भावना',
+                        emotion: 'मनोभाव',
+                        screenTime: 'स्क्रीन टाइम मॉनिटर',
+                        dailyLimit: 'दैनिक मर्यादा',
+                        minutes: 'मिनिटे'
+                    }
+                },
+                async analyzeCode() {
+                    if(!this.codeInput.trim()) return;
+                    
+                    this.isLoading = true;
+                    try {
+                        const response = await fetch('https://r0c8kgwocscg8gsokogwwsw4.zetaverse.one/ai', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer TBeL8nss5pV733mKIeTmIsrOO9m1'
+                            },
+                            body: JSON.stringify({
+                                messages: [
+                                    {
+                                        role: 'user',
+                                        content: [
+                                            {
+                                                type: 'text',
+                                                text: `Analyze this code and suggest improvements: ${this.codeInput}`
+                                            }
+                                        ]
+                                    }
+                                ]
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        this.codeAnalysis = data.message;
+                    } catch(error) {
+                        console.error('Error analyzing code:', error);
+                        this.codeAnalysis = 'Error analyzing code. Please try again.';
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                connectWhatsApp() {
+                    this.isLoading = true;
+                    setTimeout(() => {
+                        this.isConnected = true;
+                        this.isLoading = false;
+                    }, 1500);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
